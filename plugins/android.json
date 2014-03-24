@@ -21,7 +21,7 @@
     },
     "installed_plugins": {
         "org.bcsphere.bluetooth": {
-            "PACKAGE_NAME": "org.bcsphere.bcexplorer"
+            "PACKAGE_NAME": "org.bcsphere.bcautotest"
         }
     },
     "dependent_plugins": {}
