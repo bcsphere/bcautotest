@@ -1,0 +1,28 @@
+{
+    "prepare_queue": {
+        "installed": [],
+        "uninstalled": []
+    },
+    "config_munge": {
+        "res/xml/config.xml": {
+            "/*": {
+                "<feature name=\"BCBluetooth\"><param name=\"android-package\" value=\"org.bcsphere.bluetooth.BCBluetooth\" /></feature>": 1
+            }
+        },
+        "AndroidManifest.xml": {
+            "/manifest": {
+                "<uses-permission android:name=\"android.permission.BLUETOOTH\" />": 1,
+                "<uses-permission android:name=\"android.permission.BLUETOOTH_ADMIN\" />": 1
+            },
+            "/manifest/application": {
+                "<uses-library android:name=\"com.htc.android.bluetooth.le\" android:required=\"false\" />": 1
+            }
+        }
+    },
+    "installed_plugins": {
+        "org.bcsphere.bluetooth": {
+            "PACKAGE_NAME": "org.bcsphere.bcexplorer"
+        }
+    },
+    "dependent_plugins": {}
+}
