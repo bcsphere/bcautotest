@@ -1,32 +1,48 @@
-var TEST_TIMEOUT = 8000;
-var uuids = ["0000ffe0-0000-1000-8000-00805f9b34fb"];
-var descriptors = [];
-var characteristics = [];
-var services = [];
-var deviceID = "78:C5:E5:99:26:54";
-var device;
-var characteristicValue;
-document.addEventListener('bluetoothstatechange', onBluetoothStateChange, false);
-document.addEventListener('devicedisconnect', onDeviceDisconnect, false);
+/*
+    Copyright 2013-2014, JUMA Technology
 
-function onDeviceDisconnect(arg){
-    var deviceID = arg.param;
-    alert("device:"+ deviceID +" is disconnect!");
-}
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-function onBluetoothStateChange(){
-    if(BC.bluetooth.isopen){
-        alert("bluetooth is opend!");
-    }else{
-        alert("bluetooth is closed!");
-    }
-}
+        http://www.apache.org/licenses/LICENSE-2.0
 
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/
 
 describe('Bluetooth',function(){
-    var addNewDevice ;
+    var addNewDevice;
+    var TEST_TIMEOUT = 10000;
+    var uuids = ["0000ffe0-0000-1000-8000-00805f9b34fb"];
+    var services = [];
+    var characteristics = [];
+    var descriptors = [];
+    var deviceID = "78:C5:E5:99:26:54";
+    var device;
+    var characteristicValue;
     
-    document.addEventListener('newdevice', addNewDevice, false);
+    beforeEach(function() {
+        document.addEventListener('bluetoothstatechange', onBluetoothStateChange, false);
+        document.addEventListener('devicedisconnect', onDeviceDisconnect, false);
+        document.addEventListener('newdevice', addNewDevice, false);
+         
+        function onDeviceDisconnect(arg){
+            var deviceID = arg.param;
+            alert("device:"+ deviceID +" is disconnect!");
+        }
+        
+        function onBluetoothStateChange(){
+            if(BC.bluetooth.isopen){
+                alert("bluetooth is opend!");
+            }else{
+                alert("bluetooth is closed!");
+            }
+        }
+    });
     
     describe('Bluetooth Interface',function(){
         it('BC.Bluetooth',function(){
@@ -41,7 +57,6 @@ describe('Bluetooth',function(){
             });
            document.addEventListener('newdevice', addNewDevice, false);
            BC.Bluetooth.StartScan();
-           
         });
         
         it('getScanData',function(){
