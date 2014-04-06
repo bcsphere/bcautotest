@@ -25,23 +25,23 @@ describe('Bluetooth',function(){
     var device;
     var characteristicValue;
     
+    document.addEventListener('bluetoothstatechange', onBluetoothStateChange, false);
+    document.addEventListener('devicedisconnect', onDeviceDisconnect, false);
+    
+    function onDeviceDisconnect(arg){
+        var deviceID = arg.param;
+        alert("device:"+ deviceID +" is disconnect!");
+    }
+    
+    function onBluetoothStateChange(){
+        if(BC.bluetooth.isopen){
+            alert("bluetooth is opend!");
+        }else{
+            alert("bluetooth is closed!");
+        }
+    }
     beforeEach(function() {
-        document.addEventListener('bluetoothstatechange', onBluetoothStateChange, false);
-        document.addEventListener('devicedisconnect', onDeviceDisconnect, false);
         document.addEventListener('newdevice', addNewDevice, false);
-         
-        function onDeviceDisconnect(arg){
-            var deviceID = arg.param;
-            alert("device:"+ deviceID +" is disconnect!");
-        }
-        
-        function onBluetoothStateChange(){
-            if(BC.bluetooth.isopen){
-                alert("bluetooth is opend!");
-            }else{
-                alert("bluetooth is closed!");
-            }
-        }
     });
     
     describe('Bluetooth Interface',function(){

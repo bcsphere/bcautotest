@@ -21,27 +21,27 @@ describe('Bluetooth',function(){
     var services = [];
     var characteristics = [];
     var descriptors = [];
-    var serviceUUIDs = "FFF0";
+    var deviceID = "78:C5:E5:99:26:54";
     var device;
     var characteristicValue;
     
+    document.addEventListener('bluetoothstatechange', onBluetoothStateChange, false);
+    document.addEventListener('devicedisconnect', onDeviceDisconnect, false);
+    
+    function onDeviceDisconnect(arg){
+        var deviceID = arg.param;
+        alert("device:"+ deviceID +" is disconnect!");
+    }
+    
+    function onBluetoothStateChange(){
+        if(BC.bluetooth.isopen){
+            alert("bluetooth is opend!");
+        }else{
+            alert("bluetooth is closed!");
+        }
+    }
     beforeEach(function() {
-        document.addEventListener('bluetoothstatechange', onBluetoothStateChange, false);
-        document.addEventListener('devicedisconnect', onDeviceDisconnect, false);
         document.addEventListener('newdevice', addNewDevice, false);
-
-        function onDeviceDisconnect(arg){
-            var deviceID = arg.param;
-            alert("device:"+ deviceID +" is disconnect!");
-        }
-        
-        function onBluetoothStateChange(){
-            if(BC.bluetooth.isopen){
-                alert("bluetooth is opend!");
-            }else{
-                alert("bluetooth is closed!");
-            }
-        }
     });
     
     describe('Bluetooth Interface',function(){
@@ -51,15 +51,11 @@ describe('Bluetooth',function(){
         
         it('StartScan',function(){
            addNewDevice = jasmine.createSpy().andCallFake(function (arg){
-           console.log("deviceID "+ arg.deviceID);
-           var newDevice = BC.bluetooth.devices[arg.deviceID];
-           var serviceUUIDs = newDevice.advertisementData['serviceUUIDs'];
-           if(serviceUUIDs == "FFF0" || serviceUUIDs=="fff0"){
-              device = newDevice;
-           }
-           expect(arg.deviceID).toBeDefined();
-           expect(arg.deviceID).not.toBeNull();
-        });          
+             console.log("deviceID "+ arg.deviceID);
+             expect(arg.deviceID).toBeDefined()
+             expect(arg.deviceID).not.toBeNull();
+            });
+           document.addEventListener('newdevice', addNewDevice, false);
            BC.Bluetooth.StartScan();
         });
         
@@ -135,6 +131,9 @@ describe('Bluetooth',function(){
 
   
     describe('Device Interface',function(){
+        beforeEach(function() {
+            device = BC.bluetooth.devices[deviceID];
+        });
         it('connect',function(){
             expect(device).not.toBeNull();
             var connectSuccess = jasmine.createSpy().andCallFake(function(){
@@ -231,7 +230,7 @@ describe('Bluetooth',function(){
             var discoverCharacteristicsFailed = jasmine.createSpy().andCallFake(function(){
                 console.log("discoverCharacteristicsFailed");
             });
-            services[0].discoverCharacteristics(discoverCharacteristicsSuccess,discoverCharacteristicsFailed);
+            device.services[3].discoverCharacteristics(discoverCharacteristicsSuccess,discoverCharacteristicsFailed);
             waitsFor(function() { return discoverCharacteristicsSuccess.wasCalled; }, "discoverCharacteristicsSuccess never called", TEST_TIMEOUT);
             runs(function(){
                expect(discoverCharacteristicsSuccess).toHaveBeenCalled();
@@ -239,7 +238,7 @@ describe('Bluetooth',function(){
        });
         
        it('getCharacteristicByUUID',function(){
-            characteristics = services[0].getCharacteristicByUUID("fff1");
+            characteristics = device.services[3].getCharacteristicByUUID("fff1");
             runs(function(){
                console.log("characteristics.length "+ characteristics.length);
                _.each(characteristics,function(characteristic){
@@ -258,7 +257,7 @@ describe('Bluetooth',function(){
             var discoverDescriptorsFailed = jasmine.createSpy().andCallFake(function(){
                 console.log("discoverDescriptorsFailed");
             });
-            services[0].characteristics[0].discoverDescriptors(discoverDescriptorsSuccess,discoverDescriptorsFailed);
+            device.services[3].characteristics[0].discoverDescriptors(discoverDescriptorsSuccess,discoverDescriptorsFailed);
             waitsFor(function() { return discoverDescriptorsSuccess.wasCalled; }, "discoverDescriptorsSuccess never called", TEST_TIMEOUT);
             runs(function(){
                expect(discoverDescriptorsSuccess).toHaveBeenCalled();
@@ -266,7 +265,7 @@ describe('Bluetooth',function(){
         });
         
         it('getDescriptorByUUID',function(){
-            descriptors = services[0].characteristics[0].getDescriptorByUUID("2901");
+            descriptors = device.services[3].characteristics[0].getDescriptorByUUID("2901");
             runs(function(){
                console.log("descriptors.length "+ descriptors.length);
                _.each(descriptors,function(descriptor){
@@ -284,7 +283,7 @@ describe('Bluetooth',function(){
             var readFailed = jasmine.createSpy().andCallFake(function(data){
                console.log("readFailed");
             });
-            services[0].characteristics[0].read(readSuccess,readFailed);
+            device.services[3].characteristics[0].read(readSuccess,readFailed);
             waitsFor(function() { return readSuccess.wasCalled; }, "readSuccess never called", TEST_TIMEOUT);
             runs(function(){
                expect(readSuccess).toHaveBeenCalled();
@@ -300,7 +299,7 @@ describe('Bluetooth',function(){
             });
             var value = (characteristicValue=='01'?'0':'1');
             console.log("value :"+value);
-            services[0].characteristics[0].write("Hex",value,writeSuccess);
+            device.services[3].characteristics[0].write("Hex",value,writeSuccess);
             waitsFor(function() { return writeSuccess.wasCalled; }, "writeSuccess never called", TEST_TIMEOUT);
             runs(function(){
                expect(writeSuccess).toHaveBeenCalled();
@@ -315,7 +314,7 @@ describe('Bluetooth',function(){
                +"notifyValue_ascii "+data.value.getASCIIString() +"\n"
                +"notifyDate "+ data.date);
             });
-            services[0].characteristics[3].subscribe(onNotify);
+            device.services[3].characteristics[3].subscribe(onNotify);
             waitsFor(function() { return onNotify.wasCalled; }, "onNotify never called", TEST_TIMEOUT);
             runs(function(){
                expect(onNotify).toHaveBeenCalled();
@@ -329,7 +328,7 @@ describe('Bluetooth',function(){
             var unsubscribeFailed = jasmine.createSpy().andCallFake(function(data){
                console.log("readFailed");
             });
-            services[0].characteristics[3].unsubscribe(unsubscribeSuccess,unsubscribeFailed);
+            device.services[3].characteristics[3].unsubscribe(unsubscribeSuccess,unsubscribeFailed);
             waitsFor(function() { return unsubscribeSuccess.wasCalled; }, "unsubscribeSuccess never called", TEST_TIMEOUT);
             runs(function(){
                expect(unsubscribeSuccess).toHaveBeenCalled();
@@ -347,7 +346,7 @@ describe('Bluetooth',function(){
             var readFailed = jasmine.createSpy().andCallFake(function(data){
                console.log("readFailed");
             });
-            services[0].characteristics[0].descriptors[0].read(readSuccess,readFailed);
+            device.services[3].characteristics[0].descriptors[0].read(readSuccess,readFailed);
             waitsFor(function() { return readSuccess.wasCalled; }, "readSuccess never called", TEST_TIMEOUT);
             runs(function(){
                expect(readSuccess).toHaveBeenCalled();
