@@ -57,7 +57,7 @@ describe('Bluetooth',function(){
            if(serviceUUIDs == "FFF0" || serviceUUIDs=="fff0"){
               device = newDevice;
            }
-           expect(arg.deviceAddress).toBeDefined();
+           expect(arg.deviceAddrbess).toBeDefined();
            expect(arg.deviceAddress).not.toBeNull();
         });          
            BC.Bluetooth.StartScan();
