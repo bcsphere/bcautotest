@@ -11,7 +11,7 @@ module.exports = [
 module.exports.metadata = 
 // TOP OF METADATA
 {
-    "org.bcsphere.bluetooth": "0.0.1"
+    "org.bcsphere.bluetooth": "0.2.1"
 }
 // BOTTOM OF METADATA
 });
