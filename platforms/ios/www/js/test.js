@@ -57,7 +57,7 @@ describe('Bluetooth',function(){
            if(serviceUUIDs == "FFF0" || serviceUUIDs=="fff0"){
               device = newDevice;
            }
-           expect(arg.deviceAddrbess).toBeDefined();
+           expect(arg.deviceAddress).toBeDefined();
            expect(arg.deviceAddress).not.toBeNull();
         });          
            BC.Bluetooth.StartScan();
@@ -284,13 +284,19 @@ describe('Bluetooth',function(){
             var readFailed = jasmine.createSpy().andCallFake(function(data){
                console.log("readFailed");
             });
-             _.each(services,function(service){
-                _.each(service.characteristics,function(characteristic){
-                    if(characteristic.property.contains('read') && characteristic.property.contains('write')){
+            
+            for(var i=0;i<services.length;i++){
+                for(var j=0;j<services[i].characteristics.length;j++){
+                    var characteristic = services[i].characteristics[j]; 
+                    if(characteristic.property.contains('read')){
                         character=characteristic;
+                        break;
                     }
-                });
-            });
+                }
+                if(character != undefined || character!=null){
+                    break;
+                }
+            }
           
             character.read(readSuccess,readFailed);
             waitsFor(function() { return readSuccess.wasCalled; }, "readSuccess never called", TEST_TIMEOUT);
@@ -306,6 +312,22 @@ describe('Bluetooth',function(){
             var writeFailed = jasmine.createSpy().andCallFake(function(){
                console.log("writeFailed");
             });
+            
+            
+            if(character == undefined || character == null || !character.property.contains('write')){
+                for(var i=0;i<services.length;i++){
+                    for(var j=0;j<services[i].characteristics.length;j++){
+                        var characteristic = services[i].characteristics[j]; 
+                        if(characteristic.property.contains('write')){
+                            character=characteristic;
+                            break;
+                        }
+                    }
+                    if(character != undefined || character!=null){
+                        break;
+                    }
+                }
+            }
             var value = (characteristicValue=='01'?'0':'1');
             console.log("value :"+value);
             character.write("Hex",value,writeSuccess);
@@ -323,13 +345,22 @@ describe('Bluetooth',function(){
                +"notifyValue_ascii "+data.value.getASCIIString() +"\n"
                +"notifyDate "+ data.date);
             });
-             _.each(services,function(service){
-                _.each(service.characteristics,function(characteristic){
-                    if(characteristic.property.contains('notify')){
-                        character=characteristic;
+            
+            
+            if(character == undefined || character == null || !character.property.contains('notify')){
+                for(var i=0;i<services.length;i++){
+                    for(var j=0;j<services[i].characteristics.length;j++){
+                        if(services[i].characteristics[j].property.contains('notify')){
+                            character=services[i].characteristics[j];
+                            break;
+                        }
                     }
-                });
-            });
+                    
+                    if(character != undefined || character!=null){
+                        break;
+                    }
+                }
+            }
             
             character.subscribe(onNotify);
             waitsFor(function() { return onNotify.wasCalled; }, "onNotify never called", TEST_TIMEOUT);
