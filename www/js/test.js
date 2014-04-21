@@ -15,7 +15,6 @@
 */
 
 describe('Bluetooth',function(){
-    var addNewDevice;
     var TEST_TIMEOUT = 10000;
     var uuids = ["0000ffe0-0000-1000-8000-00805f9b34fb"];
     var services = [];
@@ -25,41 +24,42 @@ describe('Bluetooth',function(){
     var device;
     var character;
     var characteristicValue;
-    document.addEventListener('bluetoothstatechange', onBluetoothStateChange, false);
-    document.addEventListener('devicedisconnect', onDeviceDisconnect, false);
-    function onDeviceDisconnect(arg){
-            var deviceAddress = arg.param;
-            alert("device:"+ deviceAddress +" is disconnect!");
-        }
+    
+    var onDeviceDisconnect = function(arg){
+        alert("device:"+ arg.deviceAddress +" is disconnect!");
+    }
         
-        function onBluetoothStateChange(){
-            if(BC.bluetooth.isopen){
-                alert("bluetooth is opend!");
-            }else{
-                alert("bluetooth is closed!");
-            }
+    var onBluetoothStateChange = function(){
+       if(BC.bluetooth.isopen){
+          alert("bluetooth is opend!");
+       }else{
+          alert("bluetooth is closed!");
+       }
+    }
+    
+    var addNewDevice = jasmine.createSpy().andCallFake(function (s){
+        var newDevice = s.target;
+        expect(newDevice).toBeDefined();
+        expect(newDevice).not.toBeNull();
+        
+        console.log("deviceAddress "+ newDevice.deviceAddress);
+        var serviceUUIDs = newDevice.advertisementData['serviceUUIDs'];
+        if(serviceUUIDs == "FFF0" || serviceUUIDs=="fff0"){
+           device = newDevice;
         }
+    });          
     
     beforeEach(function() {
-        document.addEventListener('newdevice', addNewDevice, false);
+        BC.bluetooth.addEventListener('newdevice', addNewDevice);
     });
     
     describe('Bluetooth Interface',function(){
         it('BC.Bluetooth',function(){
-           expect(BC.Bluetooth).toBeDefined();
+           BC.bluetooth.addEventListener('bluetoothstatechange', onBluetoothStateChange);
+           expect(BC.bluetooth).toBeDefined();
         });
         
-        it('StartScan',function(){
-           addNewDevice = jasmine.createSpy().andCallFake(function (arg){
-           console.log("deviceAddress "+ arg.deviceAddress);
-           var newDevice = BC.bluetooth.devices[arg.deviceAddress];
-           var serviceUUIDs = newDevice.advertisementData['serviceUUIDs'];
-           if(serviceUUIDs == "FFF0" || serviceUUIDs=="fff0"){
-              device = newDevice;
-           }
-           expect(arg.deviceAddress).toBeDefined();
-           expect(arg.deviceAddress).not.toBeNull();
-        });          
+        it('startScan',function(){
            BC.Bluetooth.StartScan();
         });
         
@@ -83,54 +83,40 @@ describe('Bluetooth',function(){
            });
         });
             
-        it('create descriptor',function(){
-           var permission = ["write"];
-           var property = ["write","read"];
-           var descriptor1 = BC.Bluetooth.CreateDescriptor("00002901-0000-1000-8000-00805f9b34fb","00","Hex",permission);
-           expect(descriptor1).not.toBeNull();
-           var descriptor2 = BC.Bluetooth.CreateDescriptor("00002902-0000-1000-8000-00805f9b34fb","00","Hex",permission);
-           expect(descriptor2).not.toBeNull();
-           expect(descriptors).not.toBeNull();
-           descriptors.push(descriptor1);
-           descriptors.push(descriptor2);
-         });
+        it('addService',function(){
+            var service = new BC.Service({"uuid":"ffe0"});
+            var property = ["read","write","notify"];
+            var permission = ["read","write"];
+            var character1 = new BC.Characteristic({uuid:"ffe1",value:"01",type:"Hex",property:property,permission:permission});
+            character1.addEventListener("onsubscribestatechange",function(s){alert("OBJECT EVENT!! onsubscribestatechange : (" + s.uuid + ") state:" + s.isSubscribed);});
+            character1.addEventListener("oncharacteristicread",function(s){alert("OBJECT EVENT!! oncharacteristicread : (" + s.uuid + ")");});
+            character1.addEventListener("oncharacteristicwrite",function(s){alert("OBJECT EVENT!! oncharacteristicwrite : (" + s.uuid + ") writeValue:" + s.writeValue.getHexString());});
+            var character2 = new BC.Characteristic({uuid:"ffe2",value:"00",type:"Hex",property:property,permission:permission});
+            var descriptor1 = new BC.Descriptor({uuid:"2901",value:"00",type:"Hex",permission:permission});
+            descriptor1.addEventListener("ondescriptorread",function(s){alert("OBJECT EVENT!! ondescriptorread : " + s.uuid);});
+            descriptor1.addEventListener("ondescriptorwrite",function(s){alert("OBJECT EVENT!! ondescriptorwrite : " + s.uuid);});
+            var descriptor2 = new BC.Descriptor({uuid:"2902",value:"08",type:"Hex",permission:permission});
+            character1.addDescriptor(descriptor1);
+            character1.addDescriptor(descriptor2);
+            service.addCharacteristic(character1);
+            service.addCharacteristic(character2);
             
-         it('create characteristic',function(){
-            var permission = ["write","writeEncrypted"];             
-            var property = ["read","write"];
-            var character1 = BC.Bluetooth.CreateCharacteristic("0000ffe1-0000-1000-8000-00805f9b34fb","01","Hex",property,permission);
-            expect(character1).not.toBeNull();
-            _.each(descriptors,function(descriptor){
-               character1.addDescriptor(descriptor);
+            var addServiceSuccess = jasmine.createSpy().andCallFake(function(){
+                console.log("addServiceSuccess ");
             });
-            expect(characteristics).not.toBeNull();
-            characteristics.push(character1);
-         });
             
-         it('create service',function(){
-            var service = BC.Bluetooth.CreateService("0000ffe0-0000-1000-8000-00805f9b34fb");
-            expect(service).not.toBeNull();
-            expect(services).not.toBeNull();
-            services.push(service);
-         });
+            var addServiceFailed = jasmine.createSpy().andCallFake(function(){
+                console.log("addServiceFailed ");
+            });
             
-         it('addService',function(){
-             var addServiceSuccess = jasmine.createSpy().andCallFake(function(){
-                 console.log("addServiceSuccess ");
-             });
-                
-             var addServiceFailed = jasmine.createSpy().andCallFake(function(){
-                 console.log("addServiceFailed ");
-             });
-             _.each(services,function(service){
-                  BC.Bluetooth.AddService(service,addServiceSuccess,addServiceFailed);
-             });
-                
-             waitsFor(function() { return addServiceSuccess.wasCalled; }, "addServiceSuccess never called", TEST_TIMEOUT);
-             runs(function(){
-               expect(addServiceSuccess).toHaveBeenCalled();
-             });    
-         });
+            BC.Bluetooth.AddService(service,addServiceSuccess,addServiceFailed);
+            
+            waitsFor(function() { return addServiceSuccess.wasCalled; }, "addServiceSuccess never called", TEST_TIMEOUT);
+            
+            runs(function(){
+              expect(addServiceSuccess).toHaveBeenCalled();
+            });    
+        });
     });
 
   
@@ -143,6 +129,8 @@ describe('Bluetooth',function(){
             var connectFailed = jasmine.createSpy().andCallFake(function(){
                 console.log("connectFailed");
             });
+            
+            device.addEventListener('devicedisconnected', onDeviceDisconnect);
             device.connect(connectSuccess,connectFailed);
             waitsFor(function() { return connectSuccess.wasCalled; }, "addServiceSuccess never called", TEST_TIMEOUT);
             
