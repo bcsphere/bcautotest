@@ -44,23 +44,27 @@ describe('Bluetooth',function(){
         
         console.log("deviceAddress "+ newDevice.deviceAddress);
         var serviceUUIDs = newDevice.advertisementData['serviceUUIDs'];
-        if(serviceUUIDs == "FFF0" || serviceUUIDs=="fff0"){
+		if(serviceUUIDs == "FFF0" || serviceUUIDs=="fff0" || newDevice.deviceAddress == "78:C5:E5:99:26:54"){
            device = newDevice;
         }
+		
     });          
     
     beforeEach(function() {
-        BC.bluetooth.addEventListener('newdevice', addNewDevice);
+		setTimeout(function(){
+			BC.bluetooth.addEventListener('newdevice', addNewDevice);
+		},100);
     });
     
     describe('Bluetooth Interface',function(){
-        it('BC.Bluetooth',function(){
-           BC.bluetooth.addEventListener('bluetoothstatechange', onBluetoothStateChange);
-           expect(BC.bluetooth).toBeDefined();
-        });
-        
+	
+		it('BC.Bluetooth',function(){
+			BC.bluetooth.addEventListener('bluetoothstatechange', onBluetoothStateChange);
+			expect(BC.bluetooth).toBeDefined();
+		});
+		
         it('startScan',function(){
-           BC.Bluetooth.StartScan();
+           BC.Bluetooth.StartScan("LE");
         });
         
         it('getScanData',function(){
@@ -75,7 +79,8 @@ describe('Bluetooth',function(){
         });
             
         it('scan by uuid',function(){
-           BC.Bluetooth.StartScan(uuids);            
+          // BC.Bluetooth.StartScan("LE",uuids);            
+		   BC.Bluetooth.StartScan("LE"); 
            waitsFor(function() { return addNewDevice.wasCalled; }, "addNewDevice never called", TEST_TIMEOUT);
            runs(function(){
                expect(addNewDevice).toHaveBeenCalled();
